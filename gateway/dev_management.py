@@ -5,6 +5,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import socket
 import time
+import threading
 import proto.projeto02_pb2 as proto
 
 #O sensor que vai responder já sabe qual o grupo do multicast pois ele já ta escutando nele, mas a gente manda a porta unicast pra ele responder
@@ -61,7 +62,8 @@ def listen_device(porta_unicast_udp, devices, devices_lock):
                     "tipo": sensor.tipo,
                     "ip": sensor.ip,
                     "porta": sensor.porta,
-                    "estado": None    # sensores não têm estado
+                    "estado": None,    # sensores não têm estado
+                    "timestamp": time.time()
                 }
             print("[DEV_MNG] devices =", devices)
     #=========================================================================================================
@@ -76,7 +78,8 @@ def listen_device(porta_unicast_udp, devices, devices_lock):
                     "tipo": atuador.tipo,
                     "ip": atuador.ip,
                     "porta": atuador.porta,
-                    "estado": atuador.estado_inicial
+                    "estado": atuador.estado_inicial,
+                    "timestamp": time.time()
                 }
             print("[DEV_MNG] devices =", devices)
     #=========================================================================================================
@@ -92,6 +95,92 @@ def listen_device(porta_unicast_udp, devices, devices_lock):
                 if leitura.id in devices:
                     devices[leitura.id]["ultima_leitura"] = leitura.valor
                     devices[leitura.id]["timestamp"] = leitura.timestamp
+        
+        elif tipo_msg == "estado":
+            status_atuador = resposta.estado
+            print(f"[DEV_MNG] Status do Atuador {status_atuador.id}: {status_atuador.estado_atual}")
+            
+            with devices_lock:
+                if status_atuador.id in devices:
+                    devices[status_atuador.id]["estado"] = status_atuador.estado_atual
+                    devices[status_atuador.id]["timestamp"] = status_atuador.timestamp
 
         else:
-            print("[DEV_MNG] Mensagem recebida sem um tipo válido.")
+            print(f"[DEV_MNG] Mensagem recebida sem um tipo válido. {tipo_msg}")
+
+def handle_client(conn, addr, devices, devices_lock):
+    print(f"[DEV_MNG] Cliente conectado: {addr}")
+    try:
+        while True:
+            data = conn.recv(4096)
+            if not data: break
+            
+            req = proto.RequisicaoCliente()
+            req.ParseFromString(data)
+            
+            tipo_req = req.WhichOneof("conteudo")
+
+            if tipo_req == "comando":
+                cmd_cliente = req.comando
+                print(f"[DEV_MNG] Cliente enviando comando para {cmd_cliente.id_alvo}")
+                
+                alvo_ip = None
+                alvo_porta = None
+                
+                with devices_lock:
+                    if cmd_cliente.id_alvo in devices:
+                        dev = devices[cmd_cliente.id_alvo]
+                        alvo_ip = dev['ip']
+                        alvo_porta = dev['porta']
+                
+                if alvo_ip and alvo_porta:
+                    try:
+                        sock_atuador = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        sock_atuador.connect((alvo_ip, alvo_porta))
+                        sock_atuador.send(cmd_cliente.SerializeToString())
+                        
+                        resp_data = sock_atuador.recv(1024)
+                        sock_atuador.close()
+                        
+                        conn.send(resp_data)
+                    except Exception as e:
+                        print(f"[DEV_MNG] Erro ao falar com atuador: {e}")
+                else:
+                    print("[DEV_MNG] Atuador não encontrado ou offline.")
+            
+            elif tipo_req == "pedir_lista":
+                print("[DEV_MNG] Cliente solicitou lista de dispositivos.")
+                
+                lista_proto = proto.ListaDispositivos()
+                
+                with devices_lock:
+                    for dev_id, info in devices.items():
+                        d = lista_proto.dispositivos.add()
+                        d.id = dev_id
+                        d.tipo = info['tipo']
+                        d.ip = info['ip']
+                        d.porta = info['porta']
+                        d.estado = str(info['estado'])
+                        tempo_sem_aparecer_discovery = time.time() - info['timestamp']
+                        if tempo_sem_aparecer_discovery < 15:
+                            d.online = True
+                        else:
+                            d.online = False
+                
+                conn.send(lista_proto.SerializeToString())
+    except Exception as e:
+        print(f"[DEV_MNG] Erro: {e}")
+    finally:
+        conn.close()
+
+def tcp_server_clients(porta_tcp, devices, devices_lock):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.bind(("", porta_tcp))
+    sock.listen(5)
+    print(f"[DEV_MNG] Aguardando Clientes TCP na porta {porta_tcp}...")
+    
+    while True:
+        conn, addr = sock.accept()
+        # Cria uma thread para cada cliente
+        t = threading.Thread(target=handle_client, args=(conn, addr, devices, devices_lock))
+        t.start()

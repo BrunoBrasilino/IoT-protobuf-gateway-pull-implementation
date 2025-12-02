@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fprojeto02.proto\x12\tprojeto02\"?\n\nDescoberta\x12\x19\n\x11inicia_descoberta\x18\x01 \x01(\x08\x12\x16\n\x0eporta_resposta\x18\x02 \x01(\x05\"\x9b\x01\n\x08Resposta\x12+\n\x06sensor\x18\x01 \x01(\x0b\x32\x19.projeto02.RespostaSensorH\x00\x12-\n\x07\x61tuador\x18\x02 \x01(\x0b\x32\x1a.projeto02.RespostaAtuadorH\x00\x12+\n\x07leitura\x18\x03 \x01(\x0b\x32\x18.projeto02.LeituraSensorH\x00\x42\x06\n\x04tipo\"E\n\x0eRespostaSensor\x12\x0c\n\x04tipo\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\t\x12\n\n\x02ip\x18\x03 \x01(\t\x12\r\n\x05porta\x18\x04 \x01(\x05\"^\n\x0fRespostaAtuador\x12\x0c\n\x04tipo\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\t\x12\n\n\x02ip\x18\x03 \x01(\t\x12\r\n\x05porta\x18\x04 \x01(\x05\x12\x16\n\x0e\x65stado_inicial\x18\x05 \x01(\x08\"=\n\rLeituraSensor\x12\n\n\x02id\x18\x01 \x01(\t\x12\r\n\x05valor\x18\x02 \x01(\x02\x12\x11\n\ttimestamp\x18\x03 \x01(\x03\"D\n\rStatusAtuador\x12\n\n\x02id\x18\x01 \x01(\t\x12\x14\n\x0c\x65stado_atual\x18\x02 \x01(\x08\x12\x11\n\ttimestamp\x18\x03 \x01(\x03\"C\n\x07\x43omando\x12\x0f\n\x07id_alvo\x18\x01 \x01(\t\x12\x14\n\x0ctipo_comando\x18\x02 \x01(\t\x12\x11\n\tparametro\x18\x03 \x01(\x02\"@\n\x0fRespostaComando\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07sucesso\x18\x02 \x01(\x08\x12\x10\n\x08mensagem\x18\x03 \x01(\tb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fprojeto02.proto\x12\tprojeto02\"?\n\nDescoberta\x12\x19\n\x11inicia_descoberta\x18\x01 \x01(\x08\x12\x16\n\x0eporta_resposta\x18\x02 \x01(\x05\"\xc7\x01\n\x08Resposta\x12+\n\x06sensor\x18\x01 \x01(\x0b\x32\x19.projeto02.RespostaSensorH\x00\x12-\n\x07\x61tuador\x18\x02 \x01(\x0b\x32\x1a.projeto02.RespostaAtuadorH\x00\x12+\n\x07leitura\x18\x03 \x01(\x0b\x32\x18.projeto02.LeituraSensorH\x00\x12*\n\x06\x65stado\x18\x04 \x01(\x0b\x32\x18.projeto02.StatusAtuadorH\x00\x42\x06\n\x04tipo\"E\n\x0eRespostaSensor\x12\x0c\n\x04tipo\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\t\x12\n\n\x02ip\x18\x03 \x01(\t\x12\r\n\x05porta\x18\x04 \x01(\x05\"^\n\x0fRespostaAtuador\x12\x0c\n\x04tipo\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\t\x12\n\n\x02ip\x18\x03 \x01(\t\x12\r\n\x05porta\x18\x04 \x01(\x05\x12\x16\n\x0e\x65stado_inicial\x18\x05 \x01(\x08\"=\n\rLeituraSensor\x12\n\n\x02id\x18\x01 \x01(\t\x12\r\n\x05valor\x18\x02 \x01(\x02\x12\x11\n\ttimestamp\x18\x03 \x01(\x03\"D\n\rStatusAtuador\x12\n\n\x02id\x18\x01 \x01(\t\x12\x14\n\x0c\x65stado_atual\x18\x02 \x01(\x08\x12\x11\n\ttimestamp\x18\x03 \x01(\x03\"C\n\x07\x43omando\x12\x0f\n\x07id_alvo\x18\x01 \x01(\t\x12\x14\n\x0ctipo_comando\x18\x02 \x01(\t\x12\x11\n\tparametro\x18\x03 \x01(\x02\"@\n\x0fRespostaComando\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07sucesso\x18\x02 \x01(\x08\x12\x10\n\x08mensagem\x18\x03 \x01(\t\"]\n\x11RequisicaoCliente\x12%\n\x07\x63omando\x18\x01 \x01(\x0b\x32\x12.projeto02.ComandoH\x00\x12\x15\n\x0bpedir_lista\x18\x02 \x01(\x08H\x00\x42\n\n\x08\x63onteudo\"E\n\x11ListaDispositivos\x12\x30\n\x0c\x64ispositivos\x18\x01 \x03(\x0b\x32\x1a.projeto02.DispositivoInfo\"f\n\x0f\x44ispositivoInfo\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04tipo\x18\x02 \x01(\t\x12\n\n\x02ip\x18\x03 \x01(\t\x12\r\n\x05porta\x18\x04 \x01(\x05\x12\x0e\n\x06\x65stado\x18\x05 \x01(\t\x12\x0e\n\x06online\x18\x06 \x01(\x08\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -34,17 +34,23 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_DESCOBERTA']._serialized_start=30
   _globals['_DESCOBERTA']._serialized_end=93
   _globals['_RESPOSTA']._serialized_start=96
-  _globals['_RESPOSTA']._serialized_end=251
-  _globals['_RESPOSTASENSOR']._serialized_start=253
-  _globals['_RESPOSTASENSOR']._serialized_end=322
-  _globals['_RESPOSTAATUADOR']._serialized_start=324
-  _globals['_RESPOSTAATUADOR']._serialized_end=418
-  _globals['_LEITURASENSOR']._serialized_start=420
-  _globals['_LEITURASENSOR']._serialized_end=481
-  _globals['_STATUSATUADOR']._serialized_start=483
-  _globals['_STATUSATUADOR']._serialized_end=551
-  _globals['_COMANDO']._serialized_start=553
-  _globals['_COMANDO']._serialized_end=620
-  _globals['_RESPOSTACOMANDO']._serialized_start=622
-  _globals['_RESPOSTACOMANDO']._serialized_end=686
+  _globals['_RESPOSTA']._serialized_end=295
+  _globals['_RESPOSTASENSOR']._serialized_start=297
+  _globals['_RESPOSTASENSOR']._serialized_end=366
+  _globals['_RESPOSTAATUADOR']._serialized_start=368
+  _globals['_RESPOSTAATUADOR']._serialized_end=462
+  _globals['_LEITURASENSOR']._serialized_start=464
+  _globals['_LEITURASENSOR']._serialized_end=525
+  _globals['_STATUSATUADOR']._serialized_start=527
+  _globals['_STATUSATUADOR']._serialized_end=595
+  _globals['_COMANDO']._serialized_start=597
+  _globals['_COMANDO']._serialized_end=664
+  _globals['_RESPOSTACOMANDO']._serialized_start=666
+  _globals['_RESPOSTACOMANDO']._serialized_end=730
+  _globals['_REQUISICAOCLIENTE']._serialized_start=732
+  _globals['_REQUISICAOCLIENTE']._serialized_end=825
+  _globals['_LISTADISPOSITIVOS']._serialized_start=827
+  _globals['_LISTADISPOSITIVOS']._serialized_end=896
+  _globals['_DISPOSITIVOINFO']._serialized_start=898
+  _globals['_DISPOSITIVOINFO']._serialized_end=1000
 # @@protoc_insertion_point(module_scope)

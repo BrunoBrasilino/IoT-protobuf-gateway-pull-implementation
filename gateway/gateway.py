@@ -12,7 +12,7 @@ import time
 grupo_multicast = "224.1.1.1" #endereço genérico onde qualquer um pode ler ou escrever, os sensores vao escrever nele também
 porta_multicast = 5007        #porta registrada arbitraria (entre   1024 e ++)
 porta_unicast_udp = 6000        # onde  o gateway escuta dados de sensores (UDP)
-TCP_PORT = 7000               # porta TCP para clients
+porta_unicast_tcp = 7000               # porta TCP para clients
 
 devices = {}
 devices_lock = threading.Lock()
@@ -33,8 +33,15 @@ def start_gateway():
         daemon=True
     )
 
+    t3 = threading.Thread(
+        target=mng.tcp_server_clients,
+        args=(porta_unicast_tcp, devices, devices_lock),
+        daemon=True
+    )
+
     t1.start()
     t2.start()
+    t3.start()
 
     print("\n[GATEWAY] Descobrindo sensores em:",grupo_multicast,":",porta_multicast,"!\n")
     

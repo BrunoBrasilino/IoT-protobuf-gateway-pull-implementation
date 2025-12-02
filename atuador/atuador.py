@@ -80,14 +80,15 @@ def enviar_leituras():
             time.sleep(1)
             continue
 
-        leitura = proto.StatusAtuador()    # <-- usa exatamente o nome do .proto
+        resposta = proto.Resposta()
+        leitura = resposta.estado    # <-- usa exatamente o nome do .proto
 
         # dados da leitura
         leitura.id = MEU_ID
         leitura.estado_atual = ESTADO_ATUAL          # valor fake por enquanto
         leitura.timestamp = int(time.time())
 
-        sock.sendto(leitura.SerializeToString(), (gateway_addr, gateway_port))
+        sock.sendto(resposta.SerializeToString(), (gateway_addr, gateway_port))
         print(f"[ATUADOR] enviando ESTADO → {gateway_addr}:{gateway_port}")
 
         time.sleep(5) # intervalo entre leituras
