@@ -26,6 +26,15 @@ gateway_port = None         # porta unicast do gateway (vem no discovery)
 def escutar_discovery():
     global gateway_addr, gateway_port
 
+    socket_ip_sensor = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        socket_ip_sensor.connect(('10.255.255.255', 1))
+        IP = socket_ip_sensor.getsockname()[0]
+    except Exception:
+        IP = '127.0.0.1'
+    finally:
+        socket_ip_sensor.close()
+
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(("", PORTA_GRUPO))
@@ -57,7 +66,7 @@ def escutar_discovery():
             s = resposta.sensor              # oneof tipo = sensor
             s.tipo = MEU_TIPO
             s.id = MEU_ID
-            s.ip = "127.0.0.1"
+            s.ip = IP
             s.porta = MEU_PORTA
 
             # envia anúncio para o gateway via unicast
@@ -92,12 +101,6 @@ def enviar_leituras():
         print(f"[SENSOR] enviando LEITURA → {gateway_addr}:{gateway_port}")
 
         time.sleep(2) # intervalo entre leituras
-
-# ------------------------------------------------------------
-# THREAD 3 — RECEBER COMANDOS VIA
-# ------------------------------------------------------------
-
-
 
 # ------------------------------------------------------------
 # MAIN — INICIAR THREADS

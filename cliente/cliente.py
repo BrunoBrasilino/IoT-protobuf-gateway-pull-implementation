@@ -70,7 +70,17 @@ def enviando_requisicoes_gateway():
                 
                 sock.send(req.SerializeToString())
                 
-                data = sock.recv(4096)
+                 #                            Correção
+                #####################################################################
+                # Na conexão TCP não se pode simplesmente enviar e receber sem saber
+                # os tamanhos das mensagens, isso pode deixar o processo esperando 
+                # mais bytes do que de fato tem, e trava
+                raw_len = sock.recv(4)
+                msg_len = int.from_bytes(raw_len, "big")
+                data = sock.recv(msg_len)
+                ######################################################################
+
+                #data = sock.recv(4096)
                 lista = proto.ListaDispositivos()
                 lista.ParseFromString(data)
                 
@@ -91,8 +101,15 @@ def enviando_requisicoes_gateway():
                 cmd.tipo_comando = cmd_str
                 
                 sock.send(req.SerializeToString())
-                
-                data = sock.recv(1024)
+                #####################################################################
+                # Na conexão TCP não se pode simplesmente enviar e receber sem saber
+                # os tamanhos das mensagens, isso pode deixar o processo esperando 
+                # mais bytes do que de fato tem, e trava
+                raw_len = sock.recv(4)
+                msg_len = int.from_bytes(raw_len, "big")
+                data = sock.recv(msg_len)
+                ######################################################################
+
                 resp = proto.RespostaComando()
                 resp.ParseFromString(data)
                 print(f"[CLIENTE] Resposta: {resp.mensagem} (Sucesso: {resp.sucesso})")

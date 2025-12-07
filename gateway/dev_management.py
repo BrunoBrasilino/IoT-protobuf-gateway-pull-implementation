@@ -13,7 +13,8 @@ import proto.projeto02_pb2 as proto
 
 #================================== Scan da rede atras de devices ===============================
 def send_discover_loop(grupo_multicast, porta_multicast, porta_unicast_udp):
-    socket_udp_multi = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    socket_udp_multi = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+    socket_udp_multi.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
 
     discover_msg = proto.Descoberta()
     discover_msg.inicia_descoberta = True
@@ -89,8 +90,6 @@ def listen_device(porta_unicast_udp, devices, devices_lock):
 
             print(f"[DEV_MNG]Leitura do sensor {leitura.id} recebida: valor={leitura.valor} timestamp={leitura.timestamp}")
 
-            # Aqui você pode salvar leitura, atualizar banco, etc.
-            # Exemplo: salvar última leitura dentro do dict
             with devices_lock:
                 if leitura.id in devices:
                     devices[leitura.id]["ultima_leitura"] = leitura.valor
@@ -147,6 +146,13 @@ def handle_client(conn, addr, devices, devices_lock):
                         print(f"[DEV_MNG] Erro ao falar com atuador: {e}")
                 else:
                     print("[DEV_MNG] Atuador não encontrado ou offline.")
+                    resp = proto.RespostaComando()
+                    resp.id = cmd_cliente.id_alvo
+                    resp.sucesso = False
+                    resp.mensagem = "Atuador não encontrado"
+
+                    resp_bytes = resp.SerializeToString()
+                    conn.sendall(len(resp_bytes).to_bytes(4, "big") + resp_bytes)
             
             elif tipo_req == "pedir_lista":
                 print("[DEV_MNG] Cliente solicitou lista de dispositivos.")
@@ -166,8 +172,13 @@ def handle_client(conn, addr, devices, devices_lock):
                             d.online = True
                         else:
                             d.online = False
-                
-                conn.send(lista_proto.SerializeToString())
+                try:
+                    data_bytes = lista_proto.SerializeToString()
+                    conn.sendall((len(data_bytes).to_bytes(4, "big") + data_bytes))
+                except:
+                    print(f"Erro ao enviar os dados")
+                    conn.close()
+                    return
     except Exception as e:
         print(f"[DEV_MNG] Erro: {e}")
     finally:

@@ -12,7 +12,7 @@ import proto.projeto02_pb2 as proto
 
 GRUPO = "224.1.1.1"         #ip do grupo multicast definido
 PORTA_GRUPO = 5007          #porta do grupo multicast (igual)
-MEU_ID = "Atuador01"             #Identificador dele lá na lista
+MEU_ID = "Atuador02"             #Identificador dele lá na lista
 MEU_TIPO = "Lampada"    #tipo do dispositivo padroinzado
 ESTADO_ATUAL = False #Informa o estado atual do atuador
 MEU_PORTA = 5009            #porta unicast do dispositivo (diferente)
@@ -26,6 +26,15 @@ gateway_port = None         # porta unicast do gateway (vem no discovery)
 # ------------------------------------------------------------
 def escutar_discovery():
     global gateway_addr, gateway_port
+
+    socket_ip_atuador = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        socket_ip_atuador.connect(('10.255.255.255', 1))
+        IP = socket_ip_atuador.getsockname()[0]
+    except Exception:
+        IP = '127.0.0.1'
+    finally:
+        socket_ip_atuador.close()
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -58,7 +67,7 @@ def escutar_discovery():
             atuador = resposta.atuador              # oneof tipo = atuador
             atuador.tipo = MEU_TIPO
             atuador.id = MEU_ID
-            atuador.ip = "127.0.0.1"
+            atuador.ip = IP
             atuador.porta = MEU_PORTA
             atuador.estado_inicial = ESTADO_ATUAL
 
@@ -106,11 +115,8 @@ def escutar_comandos_tcp():
 
 
     while True:
-        
         conn, addr = sock_tcp.accept()
-
         try:
-            # Recebe os dados (1024 bytes deve ser suficiente para um comando simples)
             data = conn.recv(1024)
             if not data:
                 conn.close()
@@ -119,11 +125,9 @@ def escutar_comandos_tcp():
             cmd = proto.Comando()
             cmd.ParseFromString(data)
 
-            # Verifica se o comando é pra mim mesmo (segurança extra)
             if cmd.id_alvo == MEU_ID:
                 print(f"[ATUADOR] Comando recebido: {cmd.tipo_comando}")
                 
-                # --- LOGICA DE ATUAÇÃO ---
                 msg_retorno = "Estado inalterado"
                 
                 if cmd.tipo_comando == "LIGAR":
