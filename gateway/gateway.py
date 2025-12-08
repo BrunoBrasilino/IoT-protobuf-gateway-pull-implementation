@@ -38,10 +38,10 @@ def start_gateway():
         args=(porta_unicast_tcp, devices, devices_lock),
         daemon=True
     )
-
-    t1.start()
-    t2.start()
     t3.start()
+    t2.start()
+    t1.start()
+    
 
     print("\n[GATEWAY] Descobrindo sensores em:",grupo_multicast,":",porta_multicast,"!\n")
     

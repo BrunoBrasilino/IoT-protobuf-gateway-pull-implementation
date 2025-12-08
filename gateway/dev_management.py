@@ -6,6 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import socket
 import time
 import threading
+import struct
 import proto.projeto02_pb2 as proto
 
 #O sensor que vai responder já sabe qual o grupo do multicast pois ele já ta escutando nele, mas a gente manda a porta unicast pra ele responder
@@ -107,11 +108,14 @@ def listen_device(porta_unicast_udp, devices, devices_lock):
         else:
             print(f"[DEV_MNG] Mensagem recebida sem um tipo válido. {tipo_msg}")
 
+
 def handle_client(conn, addr, devices, devices_lock):
     print(f"[DEV_MNG] Cliente conectado: {addr}")
     try:
         while True:
-            data = conn.recv(4096)
+            raw_len = conn.recv(4)
+            msg_len = int.from_bytes(raw_len, "big")
+            data = conn.recv(msg_len)
             if not data: break
             
             req = proto.RequisicaoCliente()
@@ -136,12 +140,15 @@ def handle_client(conn, addr, devices, devices_lock):
                     try:
                         sock_atuador = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                         sock_atuador.connect((alvo_ip, alvo_porta))
-                        sock_atuador.send(cmd_cliente.SerializeToString())
+                        resp_bytes = cmd_cliente.SerializeToString()
+                        sock_atuador.sendall(len(resp_bytes).to_bytes(4, "big") + resp_bytes)
                         
-                        resp_data = sock_atuador.recv(1024)
+                        raw_len = sock_atuador.recv(4)
+                        msg_len = int.from_bytes(raw_len, "big")
+                        resp_data = sock_atuador.recv(msg_len)
                         sock_atuador.close()
                         
-                        conn.send(resp_data)
+                        conn.sendall((len(resp_data).to_bytes(4, "big") + resp_data))
                     except Exception as e:
                         print(f"[DEV_MNG] Erro ao falar com atuador: {e}")
                 else:

@@ -117,7 +117,9 @@ def escutar_comandos_tcp():
     while True:
         conn, addr = sock_tcp.accept()
         try:
-            data = conn.recv(1024)
+            raw_len = conn.recv(4)
+            msg_len = int.from_bytes(raw_len, "big")
+            data = conn.recv(msg_len)
             if not data:
                 conn.close()
                 continue
@@ -142,8 +144,10 @@ def escutar_comandos_tcp():
                 resp.id = MEU_ID
                 resp.sucesso = True
                 resp.mensagem = msg_retorno
+
+                resp_bytes = resp.SerializeToString()
                 
-                conn.send(resp.SerializeToString())
+                conn.sendall(len(resp_bytes).to_bytes(4, "big") + resp_bytes)
             else:
                 print(f"[ATUADOR] Ignorando comando para ID errado: {cmd.id_alvo}")
 

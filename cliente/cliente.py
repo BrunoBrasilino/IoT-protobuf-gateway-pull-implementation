@@ -43,8 +43,12 @@ def encontrar_gateway():
             continue
 
 def enviando_requisicoes_gateway():
-    comando = input("Deseja se concetar ao servidor [S/N]? ")
-    if comando == "S":
+    while True:
+        comando = input("Deseja se concetar ao servidor [S/N]? ")
+        if comando.upper() != "S":
+            print("Encerrando cliente.")
+            break
+
         gateway_addr = encontrar_gateway()
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -53,7 +57,7 @@ def enviando_requisicoes_gateway():
             print(f"[CLIENTE] Conectado com sucesso!")
         except Exception as e:
             print(f"[CLIENTE] Erro ao conectar: {e}")
-            return
+            continue
         
         while True:
             print("\n--- MENU ---")
@@ -61,58 +65,54 @@ def enviando_requisicoes_gateway():
             print("2. Enviar Comando (LIGAR/DESLIGAR)")
             print("0. Sair")
             comando = input("Opção: ")
-
-            if comando == "0":
-                break
-            elif comando == "1":
-                req = proto.RequisicaoCliente()
-                req.pedir_lista = True
-                
-                sock.send(req.SerializeToString())
-                
-                 #                            Correção
-                #####################################################################
-                # Na conexão TCP não se pode simplesmente enviar e receber sem saber
-                # os tamanhos das mensagens, isso pode deixar o processo esperando 
-                # mais bytes do que de fato tem, e trava
-                raw_len = sock.recv(4)
-                msg_len = int.from_bytes(raw_len, "big")
-                data = sock.recv(msg_len)
-                ######################################################################
-
-                #data = sock.recv(4096)
-                lista = proto.ListaDispositivos()
-                lista.ParseFromString(data)
-                
-                print("\n--- DISPOSITIVOS CONECTADOS ---")
-                for dev in lista.dispositivos:
-                    if dev.online:
-                        conexao = "ONLINE"
-                    else:
-                        conexao = "OFFLINE"
-                    print(f"ID: {dev.id} | Tipo: {dev.tipo} | Estado: {dev.estado} | IP: {dev.ip}:{dev.porta} | Conexão: {conexao}")
-            elif comando == "2":
-                alvo_id = input("ID do Atuador (ex: Atuador01): ")
-                cmd_str = input("Comando (LIGAR/DESLIGAR): ")
-                
-                req = proto.RequisicaoCliente()
-                cmd = req.comando
-                cmd.id_alvo = alvo_id
-                cmd.tipo_comando = cmd_str
-                
-                sock.send(req.SerializeToString())
-                #####################################################################
-                # Na conexão TCP não se pode simplesmente enviar e receber sem saber
-                # os tamanhos das mensagens, isso pode deixar o processo esperando 
-                # mais bytes do que de fato tem, e trava
-                raw_len = sock.recv(4)
-                msg_len = int.from_bytes(raw_len, "big")
-                data = sock.recv(msg_len)
-                ######################################################################
-
-                resp = proto.RespostaComando()
-                resp.ParseFromString(data)
-                print(f"[CLIENTE] Resposta: {resp.mensagem} (Sucesso: {resp.sucesso})")
+            try:
+                if comando == "0":
+                    sock.close( )
+                    return
+                elif comando == "1":
+                    req = proto.RequisicaoCliente()
+                    req.pedir_lista = True
+                    data = req.SerializeToString()
+                    sock.sendall((len(data).to_bytes(4, "big") + data))
+                    
+                    raw_len = sock.recv(4)
+                    msg_len = int.from_bytes(raw_len, "big")
+                    data = sock.recv(msg_len)
+                    lista = proto.ListaDispositivos()
+                    lista.ParseFromString(data)
+                    
+                    print("\n--- DISPOSITIVOS CONECTADOS ---")
+                    for dev in lista.dispositivos:
+                        if dev.online:
+                            conexao = "ONLINE"
+                        else:
+                            conexao = "OFFLINE"
+                        print(f"ID: {dev.id} | Tipo: {dev.tipo} | Estado: {dev.estado} | IP: {dev.ip}:{dev.porta} | Conexão: {conexao}")
+                elif comando == "2":
+                    alvo_id = input("ID do Atuador (ex: Atuador01): ")
+                    cmd_str = input("Comando (LIGAR/DESLIGAR): ")
+                    
+                    req = proto.RequisicaoCliente()
+                    cmd = req.comando
+                    cmd.id_alvo = alvo_id
+                    cmd.tipo_comando = cmd_str
+                    data = req.SerializeToString()
+                    
+                    sock.sendall(len(data).to_bytes(4, "big") + data)
+            
+                    raw_len = sock.recv(4)
+                    msg_len = int.from_bytes(raw_len, "big")
+                    data = sock.recv(msg_len)
+                    resp = proto.RespostaComando()
+                    resp.ParseFromString(data)
+                    print(f"[CLIENTE] Resposta: {resp.mensagem} (Sucesso: {resp.sucesso})")
+            except (BrokenPipeError, ConnectionResetError):
+                print("[CLIENTE] Erro: A conexão com o Gateway caiu!")
+                op = input("Deseja tentar se reconectar ao Gateway [S/N]? ")
+                if op.upper() == "S":
+                    break
+                else:
+                    return
         sock.close()
 
 enviando_requisicoes_gateway()
