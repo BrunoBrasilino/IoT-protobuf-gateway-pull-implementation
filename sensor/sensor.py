@@ -94,7 +94,7 @@ def enviar_leituras():
 
         # dados da leitura
         leitura.id = MEU_ID
-        leitura.valor = 20.5          # valor fake por enquanto
+        leitura.valor = 27.5          # valor fake por enquanto
         leitura.timestamp = int(time.time())
 
         sock.sendto(resposta.SerializeToString(), (gateway_addr, gateway_port))
